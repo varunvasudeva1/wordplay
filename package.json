@@ -1,0 +1,21 @@
+{
+  "name": "wordplay",
+  "version": "0.1.0",
+  "description": "A CLI for text-based games generated using language models.",
+  "main": "index.ts",
+  "author": "Momenta Labs",
+  "scripts": {
+    "build": "tsc",
+    "dev": "npx tsc && node build/index.js"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.11",
+    "esm": "^3.2.25",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.3"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "enquirer": "^2.4.1"
+  }
+}
