@@ -1,4 +1,4 @@
-import { getApiInfo, welcomeTo } from "./utils";
+import { getApiInfo, nanosecondsToSeconds, welcomeTo } from "./utils";
 const { Input, Select, Quiz } = require("enquirer");
 const colors = require("ansi-colors");
 const dotenv = require("dotenv");
@@ -58,7 +58,9 @@ async function createQuestions(params: GameParams): Promise<Questions> {
     const parsedResponse = await fetchResponse.json();
     const { response, total_duration } = parsedResponse;
     console.log(
-      `Generated questions successfully (took ${total_duration / 1}s).\n`
+      `Generated questions successfully (took ${nanosecondsToSeconds(
+        total_duration
+      )}s).\n`
     );
 
     const { quiz } = JSON.parse(response);

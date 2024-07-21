@@ -71,3 +71,7 @@ export async function getApiInfo() {
 
   return { endpoint, model };
 }
+
+export function nanosecondsToSeconds(seconds: number): number {
+  return seconds / 10e8;
+}
