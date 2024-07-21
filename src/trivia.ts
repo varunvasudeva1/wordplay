@@ -42,7 +42,7 @@ async function createQuestions(params: GameParams): Promise<Questions> {
         params.topic
       )} with ${colors["green"](params.difficulty)} difficulty...`
     );
-    const fetchResponse = await fetch(endpoint, {
+    const fetchResponse = await fetch(`${endpoint}/generate`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
