@@ -1,4 +1,5 @@
 import { gameColors } from "./constants";
+import { hunt } from "./hunt";
 import { trivia } from "./trivia";
 import { init, welcome } from "./utils";
 const { Select } = require("enquirer");
@@ -15,6 +16,12 @@ async function main() {
       message: `${colors[gameColors["TRIVIA"]](
         "TRIVIA"
       )}: 10 timed questions. Score decreases with time. User's choice of subject and difficulty.`,
+    },
+    {
+      name: "HUNT",
+      message: `${colors[gameColors["HUNT"]](
+        "HUNT"
+      )}: Turn-by-turn choice-based gameplay. Find or die.`,
     },
     {
       name: "EXIT",
@@ -35,8 +42,10 @@ async function main() {
       case "TRIVIA":
         trivia();
         break;
+      case "HUNT":
+        hunt();
+        break;
       case "EXIT":
-        // exit
         break;
     }
   } catch (e) {
