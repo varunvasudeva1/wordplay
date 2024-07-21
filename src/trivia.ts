@@ -37,11 +37,7 @@ async function createQuestions(params: GameParams): Promise<Questions> {
   };
 
   try {
-    console.log(
-      `Generating 10 questions on ${colors["green"](
-        params.topic
-      )} with ${colors["green"](params.difficulty)} difficulty...`
-    );
+    console.log("Generating quiz...");
     const fetchResponse = await fetch(`${endpoint}/generate`, {
       method: "POST",
       headers: {
@@ -58,7 +54,7 @@ async function createQuestions(params: GameParams): Promise<Questions> {
     const parsedResponse = await fetchResponse.json();
     const { response, total_duration } = parsedResponse;
     console.log(
-      `Generated questions successfully (took ${nanosecondsToSeconds(
+      `Generated quiz successfully (took ${nanosecondsToSeconds(
         total_duration
       )}s).\n`
     );

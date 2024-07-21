@@ -36,7 +36,7 @@ async function getChoices(messages: Message[]): Promise<GameTurn> {
   try {
     const isFirstRun = messages.length === 1;
     if (isFirstRun) {
-      console.log("Generating your hunt...");
+      console.log("Generating hunt...");
     }
 
     const fetchResponse = await fetch(`${endpoint}/chat`, {
