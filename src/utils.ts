@@ -57,3 +57,17 @@ export async function init() {
     console.error(e);
   }
 }
+
+export async function getApiInfo() {
+  const endpoint = process.env.ENDPOINT;
+  const model = process.env.MODEL;
+  if (!endpoint) {
+    throw new Error("The ENDPOINT environment variable is not set");
+  }
+  if (!model) {
+    throw new Error("The MODEL environment variable is not set");
+  }
+  await init();
+
+  return { endpoint, model };
+}

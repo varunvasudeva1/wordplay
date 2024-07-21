@@ -1,5 +1,4 @@
-import { gameColors } from "./constants";
-import { init, welcomeTo } from "./utils";
+import { getApiInfo, welcomeTo } from "./utils";
 const { Input, Select, Quiz } = require("enquirer");
 const colors = require("ansi-colors");
 const dotenv = require("dotenv");
@@ -21,15 +20,7 @@ type Questions = Question[];
 function scoreGame() {}
 
 async function createQuestions(params: GameParams): Promise<Questions> {
-  const endpoint = process.env.ENDPOINT;
-  const model = process.env.MODEL;
-  if (!endpoint) {
-    throw new Error("The ENDPOINT environment variable is not set");
-  }
-  if (!model) {
-    throw new Error("The MODEL environment variable is not set");
-  }
-  await init();
+  const { endpoint, model } = await getApiInfo();
 
   const data = {
     model: model,
