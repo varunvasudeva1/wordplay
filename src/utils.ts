@@ -18,11 +18,10 @@ export function welcome(): void {
 | |( )| || |   | ||     __)| |   | ||  _____)| |      |  ___  |  \\   /  
 | || || || |   | || (\\ (   | |   ) || (      | |      | (   ) |   ) (   
 | () () || (___) || ) \\ \\__| (__/  )| )      | (____/\\| )   ( |   | |   
-(_______)(_______)|/   \\__/(______/ |/       (_______/|/     \\|   \\_/   
-                                                                        
-
+(_______)(_______)|/   \\__/(______/ |/       (_______/|/     \\|   \\_/
     `);
-  console.log("An on-demand, LM-powered collection of text-based games.\n");
+  console.log("An on-demand, LM-powered collection of text-based games.");
+  console.log(colors["magenta"]("Developed by Varun Vasudeva.\n"));
   console.log(sectionSeparator, "\n");
 }
 
