@@ -5,8 +5,9 @@ import {
   subsectionSeparator,
 } from "./constants";
 const colors = require("ansi-colors");
-const { Input } = require("enquirer");
-require("dotenv").config();
+const dotenv = require("dotenv");
+const fs = require("fs");
+dotenv.config();
 
 export function welcome(): void {
   console.log(sectionSeparator);
@@ -27,46 +28,47 @@ export function welcome(): void {
 
 export function welcomeTo(game: GameChoice) {
   console.log(`\n${subsectionSeparator}\n`);
-  console.log("WELCOME TO", colors[gameColors[game]](game));
+  console.log("WELCOME TO", colors[gameColors[game]](game.toUpperCase()));
   console.log(`\n${subsectionSeparator}\n`);
 }
 
-export async function init() {
-  try {
-    const endpoint = process.env.ENDPOINT;
-    if (!endpoint || endpoint == "") {
-      const endpointQuestion = new Input({
-        message: "Your Ollama (or other OpenAI-compatible) endpoint:",
-        initial: "http://localhost:11434",
-      });
-      const endpointAnswer = await endpointQuestion.run();
-      process.env.ENDPOINT = endpointAnswer;
-    }
-
-    const model = process.env.MODEL;
-    if (!model || model == "") {
-      const modelQuestion = new Input({
-        message: "Your preferred model:",
-        initial: "http://localhost:11434",
-      });
-      const modelAnswer = await modelQuestion.run();
-      process.env.MODEL = modelAnswer;
-    }
-  } catch (e: any) {
-    console.error(e);
+export function setEnvironmentVariable(variableName: string, value: string) {
+  const result = dotenv.config({ path: ".env" });
+  if (result.error) {
+    console.error("Error loading .env file:", result.error);
+    return;
   }
+
+  // Convert environment variables to an object
+  const envVars = result.parsed || {};
+  envVars[variableName] = value;
+
+  // Stringify the object manually
+  let envStr = "";
+  for (const [key, val] of Object.entries(envVars)) {
+    envStr += `${key}=${val}\n`;
+  }
+
+  // Write updated environment variables back to .env
+  fs.writeFileSync(".env", envStr);
+  console.log(
+    `Environment variable ${variableName} set to ${colors["green"](value)}`
+  );
 }
 
 export async function getApiInfo() {
   const endpoint = process.env.ENDPOINT;
   const model = process.env.MODEL;
   if (!endpoint) {
-    throw new Error("The ENDPOINT environment variable is not set");
+    throw new Error(
+      "The ENDPOINT environment variable is not set. Please run `wordplay config --endpoint <endpointURL>`."
+    );
   }
   if (!model) {
-    throw new Error("The MODEL environment variable is not set");
+    throw new Error(
+      "The MODEL environment variable is not set. Please run `wordplay config --model <modelName>`."
+    );
   }
-  await init();
 
   return { endpoint, model };
 }
