@@ -81,7 +81,7 @@ function goodbyeMessage(score: number): string {
 
 export async function trivia() {
   let score = 0;
-  welcomeTo("TRIVIA");
+  welcomeTo("trivia");
   const difficultyQuestion = new Select({
     name: "difficulty",
     message: "DIFFICULTY",
