@@ -1,56 +1,52 @@
-import { gameColors } from "./constants";
+#!/usr/bin/env node
+import { GameChoice, gameColors } from "./constants";
 import { hunt } from "./hunt";
 import { trivia } from "./trivia";
-import { init, welcome } from "./utils";
-const { Select } = require("enquirer");
+import { setEnvironmentVariable, welcome } from "./utils";
 const colors = require("ansi-colors");
+const { program } = require("commander");
 require("dotenv").config();
 
-async function main() {
-  welcome();
-  await init();
-
-  const gameChoices = [
-    {
-      name: "TRIVIA",
-      message: `${colors[gameColors["TRIVIA"]](
-        "TRIVIA"
-      )}: 10 timed questions. Score decreases with time. User's choice of subject and difficulty.`,
-    },
-    {
-      name: "HUNT",
-      message: `${colors[gameColors["HUNT"]](
-        "HUNT"
-      )}: Turn-by-turn choice-based gameplay. Find or die.`,
-    },
-    {
-      name: "EXIT",
-      message: `${colors[gameColors["EXIT"]]("EXIT")}: I'm done playing.`,
-    },
-  ];
-
-  const gameChoiceQuestion = new Select({
-    name: "gameChoice",
-    message: "PICK YOUR POISON",
-    choices: gameChoices,
-  });
-
-  try {
-    const gameChoice = await gameChoiceQuestion.run();
-
-    switch (gameChoice) {
-      case "TRIVIA":
+program
+  .command("play <game>")
+  .description("play a game")
+  .action((game: GameChoice) => {
+    welcome();
+    switch (game) {
+      case "trivia":
         trivia();
         break;
-      case "HUNT":
+      case "hunt":
         hunt();
         break;
-      case "EXIT":
-        break;
+      default:
+        console.error('Invalid game type. Use "play trivia" or "play hunt".');
     }
-  } catch (e) {
-    console.error(e);
-  }
-}
+  });
 
-main();
+program
+  .command("config")
+  .description("set configuration options, e.g. API endpoint, model, etc.")
+  .option("-e, --endpoint <apiEndpoint>", "Set the API endpoint URL")
+  .option("-m, --model <modelName>", "Set the language model")
+  .action((options: { model?: string; endpoint?: string }) => {
+    if (options.endpoint) {
+      console.log(`Setting endpoint to: ${options.endpoint}`);
+      setEnvironmentVariable("ENDPOINT", options.endpoint);
+    }
+    if (options.model) {
+      console.log(`Setting model to: ${options.model}`);
+      setEnvironmentVariable("MODEL", options.model);
+    }
+  });
+
+program
+  .command("list")
+  .description("list available games")
+  .action(() => {
+    console.log("Available Games:");
+    console.log(colors[gameColors["trivia"]]("trivia"));
+    console.log(colors[gameColors["hunt"]]("hunt"));
+  });
+
+program.parse();

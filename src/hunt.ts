@@ -77,7 +77,7 @@ async function getChoices(messages: Message[]): Promise<GameTurn> {
 }
 
 export async function hunt() {
-  welcomeTo("HUNT");
+  welcomeTo("hunt");
 
   let gameOver = false;
 
