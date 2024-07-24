@@ -1,4 +1,4 @@
-import { getApiInfo, nanosecondsToSeconds, welcomeTo } from "./utils";
+import { getApiInfo, nanosecondsToSeconds, welcomeTo } from "../utils";
 const { Select } = require("enquirer");
 const colors = require("ansi-colors");
 const dotenv = require("dotenv");
