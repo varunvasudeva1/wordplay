@@ -1,9 +1,5 @@
-import {
-  GameChoice,
-  gameColors,
-  sectionSeparator,
-  subsectionSeparator,
-} from "./constants";
+import { gameColors, sectionSeparator, subsectionSeparator } from "./constants";
+import { GameChoice } from "./types";
 const colors = require("ansi-colors");
 const dotenv = require("dotenv");
 const fs = require("fs");

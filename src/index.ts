@@ -1,7 +1,8 @@
 #!/usr/bin/env node
-import { GameChoice, gameColors } from "./constants";
+import { gameColors } from "./constants";
 import { hunt } from "./games/hunt";
 import { trivia } from "./games/trivia";
+import { GameChoice } from "./types";
 import { setEnvironmentVariable, welcome } from "./utils";
 const colors = require("ansi-colors");
 const { program } = require("commander");
