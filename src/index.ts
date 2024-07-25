@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { gameColors } from "./constants";
 import { hunt } from "./games/hunt";
+import { scramble } from "./games/scramble";
 import { trivia } from "./games/trivia";
 import { GameChoice } from "./types";
 import { setEnvironmentVariable, welcome } from "./utils";
@@ -20,8 +21,13 @@ program
       case "hunt":
         hunt();
         break;
+      case "scramble":
+        scramble();
+        break;
       default:
-        console.error('Invalid game type. Use "play trivia" or "play hunt".');
+        console.error(
+          "Invalid game type. Run `wordplay list` to see available games."
+        );
     }
   });
 
