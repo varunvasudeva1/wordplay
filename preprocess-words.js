@@ -9,7 +9,17 @@ const words = fs.readFileSync(
 
 // Split the string into an array of words and filter out any hyphenated words
 const originalLength = words.split("\n").length;
-const filteredWords = words.split("\n").filter((word) => !word.includes("-"));
+const capitalizedWordRegex = `^[A-Z][^A-Z]*$`;
+const filteredWords = words
+  .split("\n")
+  .filter(
+    (word) =>
+      !word.includes("-") &&
+      !word.includes("'") &&
+      !word.includes(".") &&
+      word !== word.toUpperCase() &&
+      !word.match(capitalizedWordRegex)
+  );
 const removedCount = originalLength - filteredWords.length;
 
 // Write the filtered list of words back to the file
