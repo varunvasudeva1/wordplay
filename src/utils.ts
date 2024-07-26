@@ -1,31 +1,27 @@
-import { gameColors, sectionSeparator, subsectionSeparator } from "./constants";
+import { gameColors, sectionSeparator } from "./constants";
 import { GameChoice } from "./types";
 const colors = require("ansi-colors");
 const dotenv = require("dotenv");
 const fs = require("fs");
+const path = require("path");
 dotenv.config();
 
+export function loadTextFile(pathName: string) {
+  const text = fs.readFileSync(path.resolve(__dirname, pathName), "utf8");
+  return text;
+}
+
 export function welcome(): void {
-  console.log(sectionSeparator);
-  console.log(`
-          _______  _______  ______   _______  _        _______          
-|\\     /|(  ___  )(  ____ )(  __  \\ (  ____ )( \\      (  ___  )|\\     /|
-| )   ( || (   ) || (    )|| (  \\  )| (    )|| (      | (   ) |( \\   / )
-| | _ | || |   | || (____)|| |   ) || (____)|| |      | (___) | \\ (_) / 
-| |( )| || |   | ||     __)| |   | ||  _____)| |      |  ___  |  \\   /  
-| || || || |   | || (\\ (   | |   ) || (      | |      | (   ) |   ) (   
-| () () || (___) || ) \\ \\__| (__/  )| )      | (____/\\| )   ( |   | |   
-(_______)(_______)|/   \\__/(______/ |/       (_______/|/     \\|   \\_/
-    `);
+  const title = loadTextFile("../assets/title.txt");
+  console.log(title, "\n");
   console.log("An on-demand, LM-powered collection of text-based games.");
   console.log(colors["magenta"]("Developed by Varun Vasudeva.\n"));
   console.log(sectionSeparator, "\n");
 }
 
-export function welcomeTo(game: GameChoice) {
-  console.log(`\n${subsectionSeparator}\n`);
-  console.log("WELCOME TO", colors[gameColors[game]](game.toUpperCase()));
-  console.log(`\n${subsectionSeparator}\n`);
+export function showGameTitle(game: GameChoice) {
+  const title = loadTextFile(`../assets/${game}.txt`);
+  console.log(`\n${colors[gameColors[game]](title)}\n`);
 }
 
 export function setEnvironmentVariable(variableName: string, value: string) {
@@ -70,5 +66,5 @@ export async function getApiInfo() {
 }
 
 export function nanosecondsToSeconds(seconds: number): number {
-  return seconds / 10e8;
+  return parseFloat((seconds / 10e8).toFixed(2));
 }

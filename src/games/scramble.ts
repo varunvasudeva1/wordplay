@@ -1,6 +1,9 @@
-import { getApiInfo, nanosecondsToSeconds, welcomeTo } from "../utils";
-import fs from "fs";
-import path from "path";
+import {
+  getApiInfo,
+  loadTextFile,
+  nanosecondsToSeconds,
+  showGameTitle,
+} from "../utils";
 const List = require("enquirer/lib/prompts/List");
 const colors = require("ansi-colors");
 const dotenv = require("dotenv");
@@ -73,7 +76,7 @@ async function getWordAndPermutations(
       console.log(
         `Generated word and permutations successfully (took ${nanosecondsToSeconds(
           total_duration
-        ).toFixed(2)}s).\n`
+        )}s).\n`
       );
       console.log(`${colors["bgGreen"]("READY TO PLAY")}\n`);
     }
@@ -85,10 +88,9 @@ async function getWordAndPermutations(
 }
 
 const wordSet = new Set(
-  fs
-    .readFileSync(path.resolve(__dirname, "../../assets/words.txt"), "utf-8")
+  loadTextFile(".././assets/words.txt")
     .split("\n")
-    .map((word) => word.trim().toLowerCase())
+    .map((word: string) => word.trim().toLowerCase())
 );
 
 /**
@@ -128,7 +130,7 @@ function getCharCount(word: string): Record<string, number> {
  */
 function validateAnswers(answers: string[], originalWord: string): string[] {
   const charCountOriginal = getCharCount(originalWord);
-  // Filter out invalid words - words that are not English or have more letters than the original word
+  // Filter out invalid words - words that are not in `words.txt` or have more letters than the original word
   const validWords = answers.filter(
     (word) => isValidWord(word) && word.length <= originalWord.length
   );
@@ -148,7 +150,7 @@ function validateAnswers(answers: string[], originalWord: string): string[] {
 }
 
 export async function scramble() {
-  welcomeTo("scramble");
+  showGameTitle("scramble");
 
   try {
     const data = await getWordAndPermutations(messages);

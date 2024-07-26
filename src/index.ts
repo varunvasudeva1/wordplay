@@ -13,7 +13,6 @@ program
   .command("play <game>")
   .description("play a game")
   .action((game: GameChoice) => {
-    welcome();
     switch (game) {
       case "trivia":
         trivia();
@@ -54,6 +53,7 @@ program
     console.log("Available Games:");
     console.log(colors[gameColors["trivia"]]("trivia"));
     console.log(colors[gameColors["hunt"]]("hunt"));
+    console.log(colors[gameColors["trivia"]]("scramble"));
   });
 
 program.parse();

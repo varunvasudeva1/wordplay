@@ -1,4 +1,4 @@
-import { getApiInfo, nanosecondsToSeconds, welcomeTo } from "../utils";
+import { getApiInfo, nanosecondsToSeconds, showGameTitle } from "../utils";
 const { Select } = require("enquirer");
 const colors = require("ansi-colors");
 const dotenv = require("dotenv");
@@ -77,7 +77,7 @@ async function getChoices(messages: Message[]): Promise<GameTurn> {
 }
 
 export async function hunt() {
-  welcomeTo("hunt");
+  showGameTitle("hunt");
 
   let gameOver = false;
 
