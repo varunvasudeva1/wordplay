@@ -1,7 +1,10 @@
 import { getApiInfo, nanosecondsToSeconds, welcomeTo } from "../utils";
-const { List } = require("enquirer");
+import fs from "fs";
+import path from "path";
+const List = require("enquirer/lib/prompts/List");
 const colors = require("ansi-colors");
 const dotenv = require("dotenv");
+const lodash = require("lodash");
 dotenv.config();
 
 type WordAndPermutations = {
@@ -21,28 +24,11 @@ const messages: Message[] = [
   },
 ];
 
-function scrambleWord(word: string): string {
-  if (!word) {
-    throw new Error("No word found to scramble.");
-  }
-  let wordArray = word.split("");
-  let randomizedWordArray = [];
-  while (wordArray.length > 0) {
-    const randomIndex = Math.floor(Math.random() * wordArray.length);
-    const chosenChar = wordArray[randomIndex];
-    randomizedWordArray.push(chosenChar);
-    // Remove from wordArray
-    const chosenCharIndex = wordArray.indexOf(chosenChar);
-    if (chosenCharIndex > -1) {
-      wordArray = wordArray
-        .slice(0, chosenCharIndex)
-        .concat(wordArray.slice(chosenCharIndex + 1));
-    }
-  }
-  const scrambledWord = randomizedWordArray.join("");
-  return scrambledWord;
-}
-
+/**
+ * Function to obtain a word and its permutations
+ * @param messages Array of messages for LLM
+ * @returns Object containing word and permutations
+ */
 async function getWordAndPermutations(
   messages: Message[]
 ): Promise<WordAndPermutations> {
@@ -87,59 +73,78 @@ async function getWordAndPermutations(
       console.log(
         `Generated word and permutations successfully (took ${nanosecondsToSeconds(
           total_duration
-        )}s).\n`
+        ).toFixed(2)}s).\n`
       );
       console.log(`${colors["bgGreen"]("READY TO PLAY")}\n`);
     }
     const wordAndPermutations = JSON.parse(message.content);
     return wordAndPermutations as WordAndPermutations;
   } catch (e: any) {
-    console.error("Error generating choices:", e);
-    throw e;
+    throw new Error(`Error generating word/permutations: ${e.message}`);
   }
 }
 
-async function isValidWord(word: string): Promise<boolean> {
-  try {
-    const isWordValid = await fetch(
-      `https://api.dictionaryapi.dev/api/v2/entries/en/${word}`
-    );
-    const isWordValidParsed = await isWordValid.json();
-    if (
-      isWordValidParsed.title &&
-      isWordValidParsed.title === "No Definitions Found"
-    ) {
-      return false;
+const wordSet = new Set(
+  fs
+    .readFileSync(path.resolve(__dirname, "../../assets/words.txt"), "utf-8")
+    .split("\n")
+    .map((word) => word.trim().toLowerCase())
+);
+
+/**
+ * Function to check the validity of a word using `words.txt`
+ * @param word Word to be checked
+ * @returns True if valid, false otherwise
+ */
+function isValidWord(word: string): boolean {
+  return wordSet.has(word);
+}
+
+/**
+ *
+ * @param word Word to get character counts for
+ * @returns Character counts for the word
+ */
+function getCharCount(word: string): Record<string, number> {
+  const charCount: Record<string, number> = {};
+  for (let i = 0; i < word.length; i++) {
+    const char = word[i];
+    if (charCount[char]) {
+      charCount[char]++;
     } else {
-      return true;
+      charCount[char] = 1;
     }
-  } catch (e: any) {
-    throw new Error(`Error checking validity of word: ${e.message}`);
   }
+  return charCount;
 }
 
-async function validateLLMAnswers(
-  generatedAnswers: string[]
-): Promise<string[]> {
-  const validatedAnswers = generatedAnswers.map(isValidWord);
-  const results = await Promise.all(validatedAnswers);
-  const validAnswers: string[] = generatedAnswers.filter((_, i) => results[i]);
-  const uniqueValidAnswers = [...new Set(validAnswers)];
-  return uniqueValidAnswers;
-}
+/**
+ * Function to validate an array of answers
+ * Checks if:
+ * 1) the word exists and,
+ * 2) has the same (or less) number of characters as the original word
+ * @param answers The array of answers to be validated
+ * @returns The array of all valid answers from the original array
+ */
+function validateAnswers(answers: string[], originalWord: string): string[] {
+  const charCountOriginal = getCharCount(originalWord);
+  // Filter out invalid words - words that are not English or have more letters than the original word
+  const validWords = answers.filter(
+    (word) => isValidWord(word) && word.length <= originalWord.length
+  );
 
-async function checkAnswer(answer: string, correctAnswers: string[]) {
-  try {
-    const isAnswerInPermutations = correctAnswers.includes(answer);
-    if (isAnswerInPermutations) {
-      return true;
-    } else {
-      const isAnswerAValidWord = await isValidWord(answer);
-      return isAnswerAValidWord;
+  const validAnswers = validWords.filter((word) => {
+    const charCountWord = getCharCount(word);
+    for (const [char, count] of Object.entries(charCountWord)) {
+      if (!charCountOriginal[char] || count > charCountOriginal[char]) {
+        return false;
+      }
     }
-  } catch (e: any) {
-    console.log("Something went wrong checking an answer. Try again.");
-  }
+    return true;
+  });
+
+  // Remove duplicates and return the validated answers
+  return [...new Set(validAnswers)];
 }
 
 export async function scramble() {
@@ -153,28 +158,17 @@ export async function scramble() {
       );
     }
 
-    const scrambledWord = scrambleWord(data.word);
-    console.log("letters: ", scrambledWord);
+    const scrambledWord = lodash.shuffle(data.word);
+    console.log("letters: ", scrambledWord.join(" "));
 
     const question = new List({
       name: "words",
       message: "Type comma-separated answers",
     });
     const userAnswers: string[] = await question.run();
-    const validatedAnswers = await validateLLMAnswers(data.permutations);
+    const validatedAnswers = validateAnswers(data.permutations, data.word);
+    const correctAnswers = validateAnswers(userAnswers, data.word);
 
-    console.log("\nChecking answers...");
-    const start = new Date().getTime();
-    const answersCheck = userAnswers.map((a) =>
-      checkAnswer(a, validatedAnswers)
-    );
-    const results = await Promise.all(answersCheck);
-    const correctAnswers = [
-      ...new Set(userAnswers.filter((_, i) => results[i])),
-    ];
-    const end = new Date().getTime();
-
-    console.log(`Checked answers (took ${(end - start) / 1000}s).`);
     console.log(
       `You got ${colors["green"](correctAnswers.length)} out of ${
         validatedAnswers.length
@@ -182,17 +176,16 @@ export async function scramble() {
     );
 
     // Take a union of correct answers from user and LLM for a master list
-    const allCorrectAnswers = [
-      ...new Set([...correctAnswers, ...validatedAnswers]),
-    ];
+    const allCorrectAnswers: string[] = lodash.union(
+      correctAnswers,
+      validatedAnswers
+    );
 
     // Compare the two lists
     console.log(
       `${colors["green"]("You answered: ")}${correctAnswers.join(", ")}`
     );
-    const missedAnswers = allCorrectAnswers.filter(
-      (answer) => !correctAnswers.includes(answer)
-    );
+    const missedAnswers = lodash.difference(allCorrectAnswers, correctAnswers);
     {
       missedAnswers.length > 0
         ? console.log(
