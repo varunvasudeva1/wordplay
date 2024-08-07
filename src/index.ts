@@ -53,7 +53,7 @@ program
     console.log("Available Games:");
     console.log(colors[gameColors["trivia"]]("trivia"));
     console.log(colors[gameColors["hunt"]]("hunt"));
-    console.log(colors[gameColors["trivia"]]("scramble"));
+    console.log(colors[gameColors["scramble"]]("scramble"));
   });
 
 program.parse();
