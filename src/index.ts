@@ -37,11 +37,9 @@ program
   .option("-m, --model <modelName>", "Set the language model")
   .action((options: { model?: string; endpoint?: string }) => {
     if (options.endpoint) {
-      console.log(`Setting endpoint to: ${options.endpoint}`);
       setEnvironmentVariable("ENDPOINT", options.endpoint);
     }
     if (options.model) {
-      console.log(`Setting model to: ${options.model}`);
       setEnvironmentVariable("MODEL", options.model);
     }
   });

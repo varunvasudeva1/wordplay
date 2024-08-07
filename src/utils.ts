@@ -25,27 +25,42 @@ export function showGameTitle(game: GameChoice) {
 }
 
 export function setEnvironmentVariable(variableName: string, value: string) {
-  const result = dotenv.config({ path: ".env" });
-  if (result.error) {
-    console.error("Error loading .env file:", result.error);
-    return;
+  // Check if .env exists
+  if (!fs.existsSync(".env")) {
+    console.log("Creating .env file...");
+    fs.writeFileSync(".env", `${variableName}=${value}`);
+    console.log(
+      `Environment variable ${variableName} set to ${colors["green"](value)}`
+    );
+    return; // Exit after creating the file
   }
 
-  // Convert environment variables to an object
-  const envVars = result.parsed || {};
-  envVars[variableName] = value;
+  try {
+    const result = dotenv.config({ path: ".env" });
 
-  // Stringify the object manually
-  let envStr = "";
-  for (const [key, val] of Object.entries(envVars)) {
-    envStr += `${key}=${val}\n`;
+    if (result.error) {
+      console.error("Error loading .env file:", result.error);
+      return;
+    }
+
+    // Convert environment variables to an object
+    const envVars = result.parsed || {};
+    envVars[variableName] = value;
+
+    // Stringify the object manually
+    let envStr = "";
+    for (const [key, val] of Object.entries(envVars)) {
+      envStr += `${key}=${val}\n`;
+    }
+
+    // Write updated environment variables back to .env
+    fs.writeFileSync(".env", envStr);
+    console.log(
+      `Environment variable ${variableName} set to ${colors["green"](value)}`
+    );
+  } catch (err) {
+    console.error("Error writing to .env file:", err);
   }
-
-  // Write updated environment variables back to .env
-  fs.writeFileSync(".env", envStr);
-  console.log(
-    `Environment variable ${variableName} set to ${colors["green"](value)}`
-  );
 }
 
 export async function getApiInfo() {
