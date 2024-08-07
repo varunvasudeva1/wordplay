@@ -13,24 +13,28 @@ An open-source CLI that lets you experience fun text-based games powered by larg
 > [!NOTE] 
 > Replace all parameters within `()` with actual values. For example, replace `(model)` with `gemma2:9b`.
 
-1. Install via `npm`
+1. Clone and navigate to repo
    ```bash
    git clone https://github.com/varunvasudeva1/wordplay-cli
    cd wordplay-cli
+   ```
+
+2. Install globally via `npm`
+   ```bash
    sudo npm i -g
    ```
 
-2. Configure the model and endpoint
+3. Configure the model and endpoint
    ```bash
    wordplay config -m (model) -e (endpoint)
    ```
 
-3. Check available games
+4. Check available games
    ```bash
    wordplay list
    ```
 
-4. Play!
+5. Play!
    ```bash
    wordplay play (game)
    ```
@@ -40,7 +44,8 @@ An open-source CLI that lets you experience fun text-based games powered by larg
 To update, simply pull changes and rebuild.
 
 ```bash
-git pull https://github.com/varunvasudeva1/wordplay-cli
+cd wordplay-cli
+git pull
 npm run build
 ```
 
