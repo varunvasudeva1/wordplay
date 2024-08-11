@@ -31,7 +31,7 @@ const messages: Message[] = [
 async function getWordAndPermutations(
   messages: Message[]
 ): Promise<WordAndPermutations> {
-  const { endpoint, model } = await getApiInfo();
+  const { base_url, model } = await getApiInfo();
 
   const data = {
     model: model,
@@ -47,7 +47,7 @@ async function getWordAndPermutations(
       console.log("Generating word and permutations...");
     }
 
-    const fetchResponse = await fetch(`${endpoint}/api/chat`, {
+    const fetchResponse = await fetch(`${base_url}/api/chat`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

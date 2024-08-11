@@ -32,12 +32,12 @@ program
 
 program
   .command("config")
-  .description("set configuration options, e.g. API endpoint, model, etc.")
-  .option("-e, --endpoint <apiEndpoint>", "Set the API endpoint URL")
-  .option("-m, --model <modelName>", "Set the language model")
-  .action((options: { model?: string; endpoint?: string }) => {
-    if (options.endpoint) {
-      setEnvironmentVariable("ENDPOINT", options.endpoint);
+  .description("set configuration options, e.g. API base URL, model, etc.")
+  .option("-b, --base_url <base_url>", "Set the API base URL")
+  .option("-m, --model <model>", "Set the language model")
+  .action((options: { base_url?: string; model?: string }) => {
+    if (options.base_url) {
+      setEnvironmentVariable("BASE_URL", options.base_url);
     }
     if (options.model) {
       setEnvironmentVariable("MODEL", options.model);

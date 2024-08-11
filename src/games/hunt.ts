@@ -24,7 +24,7 @@ const messages: Message[] = [
  * @returns Object of type GameTurn: plot, choices, and outcome
  */
 async function getChoices(messages: Message[]): Promise<GameTurn> {
-  const { endpoint, model } = await getApiInfo();
+  const { base_url, model } = await getApiInfo();
 
   const data = {
     model: model,
@@ -40,7 +40,7 @@ async function getChoices(messages: Message[]): Promise<GameTurn> {
       console.log("Generating hunt...");
     }
 
-    const fetchResponse = await fetch(`${endpoint}/api/chat`, {
+    const fetchResponse = await fetch(`${base_url}/api/chat`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

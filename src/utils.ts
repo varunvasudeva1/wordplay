@@ -64,20 +64,20 @@ export function setEnvironmentVariable(variableName: string, value: string) {
 }
 
 export async function getApiInfo() {
-  const endpoint = process.env.ENDPOINT;
+  const base_url = process.env.BASE_URL;
   const model = process.env.MODEL;
-  if (!endpoint) {
+  if (!base_url) {
     throw new Error(
-      "The ENDPOINT environment variable is not set. Please run `wordplay config --endpoint <endpointURL>`."
+      "The BASE_URL environment variable is not set. Please run `wordplay config --base_url <base_url>`."
     );
   }
   if (!model) {
     throw new Error(
-      "The MODEL environment variable is not set. Please run `wordplay config --model <modelName>`."
+      "The MODEL environment variable is not set. Please run `wordplay config --model <model>`."
     );
   }
 
-  return { endpoint, model };
+  return { base_url, model };
 }
 
 export function nanosecondsToSeconds(seconds: number): number {

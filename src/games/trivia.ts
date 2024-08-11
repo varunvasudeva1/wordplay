@@ -24,7 +24,7 @@ function scoreGame() {}
  * @returns
  */
 async function createQuestions(params: GameParams): Promise<Question[]> {
-  const { endpoint, model } = await getApiInfo();
+  const { base_url, model } = await getApiInfo();
 
   const messages: Message[] = [
     {
@@ -48,7 +48,7 @@ async function createQuestions(params: GameParams): Promise<Question[]> {
 
   try {
     console.log("Generating quiz...");
-    const fetchResponse = await fetch(`${endpoint}/api/chat`, {
+    const fetchResponse = await fetch(`${base_url}/api/chat`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
