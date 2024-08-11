@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "A CLI for text-based games generated on-demand using language models.",
   "author": "Varun Vasudeva",
+  "main": "build/index.js",
   "scripts": {
     "build": "npx tsc",
     "dev": "npx tsc && node build/index.js"
