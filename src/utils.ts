@@ -6,6 +6,11 @@ const fs = require("fs");
 const path = require("path");
 dotenv.config();
 
+/**
+ * Function to load text file assets
+ * @param pathName Path to file
+ * @returns String containing the text in the file
+ */
 export function loadTextFile(pathName: string) {
   const text = fs.readFileSync(path.resolve(__dirname, pathName), "utf8");
   return text;
@@ -19,12 +24,25 @@ export function welcome(): void {
   console.log(sectionSeparator, "\n");
 }
 
+/**
+ * Function to show the game title
+ * @param game Game title to show, of type `GameChoice`
+ */
 export function showGameTitle(game: GameChoice) {
   const title = loadTextFile(`../assets/${game}.txt`);
   console.log(`\n${colors[gameColors[game]](title)}\n`);
 }
 
-export function setEnvironmentVariable(variableName: string, value: string) {
+/**
+ *
+ * @param variableName Name of variable to initialize/change
+ * @param value Value of variable to initialize/change
+ * @returns Void
+ */
+export function setEnvironmentVariable(
+  variableName: string,
+  value: string
+): void {
   // Check if .env exists
   if (!fs.existsSync(".env")) {
     console.log("Creating .env file...");
@@ -63,6 +81,10 @@ export function setEnvironmentVariable(variableName: string, value: string) {
   }
 }
 
+/**
+ * Function to get API info
+ * @returns Object containing `base_url` and `model` keys
+ */
 export async function getApiInfo() {
   const base_url = process.env.BASE_URL;
   const model = process.env.MODEL;
@@ -80,6 +102,11 @@ export async function getApiInfo() {
   return { base_url, model };
 }
 
-export function nanosecondsToSeconds(seconds: number): number {
-  return parseFloat((seconds / 10e8).toFixed(2));
+/**
+ * Function to convert nanoseconds to seconds. Used to process Ollama response duration.
+ * @param seconds Value in nanoseconds
+ * @returns Value in seconds, clamped to 2 decimal places
+ */
+export function nanosecondsToSeconds(ns: number): number {
+  return parseFloat((ns / 10e8).toFixed(2));
 }

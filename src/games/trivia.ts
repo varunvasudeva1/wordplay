@@ -20,7 +20,7 @@ function scoreGame() {}
 
 /**
  * Function to create questions
- * @param params Object containing game parameters (topic, difficulty)
+ * @param params Object containing game parameters, `topic` and `difficulty`
  * @returns
  */
 async function createQuestions(params: GameParams): Promise<Question[]> {
@@ -77,6 +77,11 @@ async function createQuestions(params: GameParams): Promise<Question[]> {
   }
 }
 
+/**
+ * Function to create goodbye message based on score
+ * @param score Game score out of 10
+ * @returns Message to be associated with the score
+ */
 function goodbyeMessage(score: number): string {
   if (score < 2) {
     return "Better luck next time!";

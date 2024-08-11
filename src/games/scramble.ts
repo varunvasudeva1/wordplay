@@ -26,7 +26,7 @@ const messages: Message[] = [
 /**
  * Function to obtain a word and its permutations
  * @param messages Array of messages for LLM
- * @returns Object containing word and permutations
+ * @returns Object containing `word` and `permutations`
  */
 async function getWordAndPermutations(
   messages: Message[]
