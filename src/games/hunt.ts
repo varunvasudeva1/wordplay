@@ -1,3 +1,4 @@
+import { Message } from "../types";
 import { getApiInfo, nanosecondsToSeconds, showGameTitle } from "../utils";
 const { Select } = require("enquirer");
 const colors = require("ansi-colors");
@@ -10,11 +11,6 @@ type GameTurn = {
   outcome: "won" | "died" | "undecided";
 };
 
-type Message = {
-  role: "user" | "assistant" | "system";
-  content: string;
-};
-
 const messages: Message[] = [
   {
     role: "system",
@@ -22,6 +18,11 @@ const messages: Message[] = [
   },
 ];
 
+/**
+ * Function to get choices for the user's turn in the game
+ * @param messages Conversation between user and LLM
+ * @returns Object of type GameTurn: plot, choices, and outcome
+ */
 async function getChoices(messages: Message[]): Promise<GameTurn> {
   const { endpoint, model } = await getApiInfo();
 
@@ -39,7 +40,7 @@ async function getChoices(messages: Message[]): Promise<GameTurn> {
       console.log("Generating hunt...");
     }
 
-    const fetchResponse = await fetch(`${endpoint}/chat`, {
+    const fetchResponse = await fetch(`${endpoint}/api/chat`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

@@ -1,3 +1,4 @@
+import { Message } from "../types";
 import {
   getApiInfo,
   loadTextFile,
@@ -13,11 +14,6 @@ dotenv.config();
 type WordAndPermutations = {
   word: string;
   permutations: string[];
-};
-
-type Message = {
-  role: "user" | "assistant" | "system";
-  content: string;
 };
 
 const messages: Message[] = [
@@ -51,7 +47,7 @@ async function getWordAndPermutations(
       console.log("Generating word and permutations...");
     }
 
-    const fetchResponse = await fetch(`${endpoint}/chat`, {
+    const fetchResponse = await fetch(`${endpoint}/api/chat`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
