@@ -3,7 +3,7 @@ import { gameColors } from "./constants";
 import { hunt } from "./games/hunt";
 import { scramble } from "./games/scramble";
 import { trivia } from "./games/trivia";
-import { GameChoice } from "./types";
+import { APIProvider, GameChoice } from "./types";
 import { setEnvironmentVariable, welcome } from "./utils";
 const colors = require("ansi-colors");
 const { program } = require("commander");
@@ -32,17 +32,47 @@ program
 
 program
   .command("config")
-  .description("set configuration options, e.g. API base URL, model, etc.")
+  .description(
+    "set configuration options, e.g. API base URL, provider, model, etc."
+  )
   .option("-b, --base_url <base_url>", "Set the API base URL")
+  .option("-p, --provider <provider>", "Set the API provider")
   .option("-m, --model <model>", "Set the language model")
-  .action((options: { base_url?: string; model?: string }) => {
-    if (options.base_url) {
-      setEnvironmentVariable("BASE_URL", options.base_url);
+  .action(
+    (options: {
+      base_url?: string;
+      provider?: APIProvider;
+      model?: string;
+    }) => {
+      if (options.base_url) {
+        setEnvironmentVariable(
+          "BASE_URL",
+          options.base_url.toLowerCase().trim()
+        );
+      }
+      if (options.provider) {
+        enum APIProvider {
+          openai = "openai",
+          ollama = "ollama",
+        }
+
+        if (options.provider && !(options.provider in APIProvider)) {
+          throw new Error(
+            `Unrecognized provider: ${
+              options.provider
+            }. Must be one of [${Object.values(APIProvider).join(", ")}].`
+          );
+        }
+        setEnvironmentVariable(
+          "PROVIDER",
+          options.provider.toLowerCase().trim()
+        );
+      }
+      if (options.model) {
+        setEnvironmentVariable("MODEL", options.model.toLowerCase().trim());
+      }
     }
-    if (options.model) {
-      setEnvironmentVariable("MODEL", options.model);
-    }
-  });
+  );
 
 program
   .command("list")
