@@ -1,6 +1,6 @@
 import { Message } from "../types";
 import {
-  getApiInfo,
+  getLLMResponse,
   loadTextFile,
   nanosecondsToSeconds,
   showGameTitle,
@@ -31,10 +31,7 @@ const messages: Message[] = [
 async function getWordAndPermutations(
   messages: Message[]
 ): Promise<WordAndPermutations> {
-  const { base_url, model } = await getApiInfo();
-
   const data = {
-    model: model,
     messages,
     format: "json",
     stream: false,
@@ -46,21 +43,7 @@ async function getWordAndPermutations(
     if (isFirstRun) {
       console.log("Generating word and permutations...");
     }
-
-    const fetchResponse = await fetch(`${base_url}/api/chat`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    });
-    if (!fetchResponse.ok) {
-      throw new Error(
-        `Fetch request failed with status ${fetchResponse.status}`
-      );
-    }
-
-    const parsedResponse = await fetchResponse.json();
+    const parsedResponse = await getLLMResponse(data);
     const {
       message,
       total_duration,

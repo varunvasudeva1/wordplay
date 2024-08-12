@@ -1,5 +1,5 @@
 import { gameColors, sectionSeparator } from "./constants";
-import { GameChoice } from "./types";
+import { APIProvider, GameChoice, Message } from "./types";
 const colors = require("ansi-colors");
 const dotenv = require("dotenv");
 const fs = require("fs");
@@ -82,15 +82,21 @@ export function setEnvironmentVariable(
 }
 
 /**
- * Function to get API info
- * @returns Object containing `base_url` and `model` keys
+ * Function to get API information
+ * @returns Object containing `base_url`, `provider`, and `model` keys
  */
 export async function getApiInfo() {
   const base_url = process.env.BASE_URL;
+  const provider: APIProvider = process.env.PROVIDER as APIProvider;
   const model = process.env.MODEL;
   if (!base_url) {
     throw new Error(
       "The BASE_URL environment variable is not set. Please run `wordplay config --base_url <base_url>`."
+    );
+  }
+  if (!provider) {
+    throw new Error(
+      "The PROVIDER environment variable is not set. Please run `wordplay config --provider <provider>`."
     );
   }
   if (!model) {
@@ -99,7 +105,7 @@ export async function getApiInfo() {
     );
   }
 
-  return { base_url, model };
+  return { base_url, provider, model };
 }
 
 /**
@@ -109,4 +115,48 @@ export async function getApiInfo() {
  */
 export function nanosecondsToSeconds(ns: number): number {
   return parseFloat((ns / 10e8).toFixed(2));
+}
+
+/**
+ *
+ * @param data Object containing specs for API call, e.g. `model`, `messages`, `temperature`, etc.
+ * @param descriptor Type of response being generated, e.g. "hunt" or "quiz"
+ * @returns Message content depending on API provider
+ */
+export async function getLLMResponse(
+  data: any
+): Promise<{ message: Message; total_duration: number }> {
+  const {
+    base_url,
+    provider,
+    model,
+  }: {
+    base_url: string;
+    provider: APIProvider;
+    model: string;
+  } = await getApiInfo();
+  const startTime = Date.now();
+  const endpoint = provider === "ollama" ? "api/chat" : "v1/chat/completions";
+  const fetchResponse = await fetch(`${base_url}/${endpoint}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ ...data, model: model }),
+  });
+  if (!fetchResponse.ok) {
+    throw new Error(`Fetch request failed with status ${fetchResponse.status}`);
+  }
+  const parsedResponse = await fetchResponse.json();
+
+  if (provider === "ollama") {
+    return parsedResponse;
+  } else {
+    const { choices, created } = parsedResponse;
+    const total_duration = (startTime - created) / 1000;
+    return {
+      message: choices[0].message,
+      total_duration,
+    };
+  }
 }

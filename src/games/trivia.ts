@@ -1,5 +1,5 @@
 import { Message } from "../types";
-import { getApiInfo, nanosecondsToSeconds, showGameTitle } from "../utils";
+import { getLLMResponse, nanosecondsToSeconds, showGameTitle } from "../utils";
 const { Input, Select, Quiz } = require("enquirer");
 const colors = require("ansi-colors");
 const dotenv = require("dotenv");
@@ -24,8 +24,6 @@ function scoreGame() {}
  * @returns
  */
 async function createQuestions(params: GameParams): Promise<Question[]> {
-  const { base_url, model } = await getApiInfo();
-
   const messages: Message[] = [
     {
       role: "system",
@@ -40,7 +38,6 @@ async function createQuestions(params: GameParams): Promise<Question[]> {
   ];
 
   const data = {
-    model: model,
     messages,
     format: "json",
     stream: false,
@@ -48,27 +45,13 @@ async function createQuestions(params: GameParams): Promise<Question[]> {
 
   try {
     console.log("Generating quiz...");
-    const fetchResponse = await fetch(`${base_url}/api/chat`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    });
-    if (!fetchResponse.ok) {
-      throw new Error(
-        `Fetch request failed with status ${fetchResponse.status}`
-      );
-    }
-
-    const parsedResponse = await fetchResponse.json();
+    const parsedResponse = await getLLMResponse(data);
     const { message, total_duration } = parsedResponse;
     console.log(
       `Generated quiz successfully (took ${nanosecondsToSeconds(
         total_duration
       )}s).\n`
     );
-
     const { quiz } = JSON.parse(message.content);
     return quiz as Question[];
   } catch (e: any) {

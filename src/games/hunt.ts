@@ -1,5 +1,5 @@
 import { Message } from "../types";
-import { getApiInfo, nanosecondsToSeconds, showGameTitle } from "../utils";
+import { getLLMResponse, nanosecondsToSeconds, showGameTitle } from "../utils";
 const { Select } = require("enquirer");
 const colors = require("ansi-colors");
 const dotenv = require("dotenv");
@@ -14,7 +14,7 @@ type GameTurn = {
 const messages: Message[] = [
   {
     role: "system",
-    content: `You are tasked with generating an adventure game with the objective of finding a treasure chest. Your game will be played as a choice-based game by a user, who will go turn by turn until they find the chest or die a painful death. You must generate the story and, then, take the user through it turn by turn. First generate the story's outline, which will be shown to the user. Then provide the first turn's choices. Following that, the user will choose, and you will present the next turn's choices. This process will repeat until either the user picks a choice that ends in their demise or the treasure is found. Respond with a JSON object containing three keys: “plot”, “choices”, and "outcome". “plot” should simply be a string that progresses the story, "choices” should be an array of strings containing the choices the user can make, and "outcome" should be either "won", "died", or "undecided". If there is no further choice to be made because the story has reached a conclusion, "plot" should be the conclusion, “choices” should be an empty array, and "outcome" should be "won" or "died" - otherwise, it should be "undecided". Be sure to label the choices with lettering so the user can choose easily without typing the entire choice in.`,
+    content: `You are tasked with generating an adventure game with the objective of finding a treasure chest. Your game will be played as a choice-based game by a user, who will go turn by turn until they find the chest or die a painful death. You must generate the story and, then, take the user through it turn by turn. First generate the story's outline, which will be shown to the user. Then provide the first turn's choices. Following that, the user will choose, and you will present the next turn's choices. This process will repeat until either the user picks a choice that ends in their demise or the treasure is found. Respond with a JSON object containing three keys: “plot”, “choices”, and "outcome". “plot” should simply be a string that progresses the story, "choices” should be an array of strings containing the choices the user can make, and "outcome" should be either "won", "died", or "undecided". If there is no further choice to be made because the story has reached a conclusion, "plot" should be the conclusion, “choices” should be an empty array, and "outcome" should be "won" or "died" - otherwise, it should be "undecided". Be sure to label the choices with lettering so the user can choose easily without typing the entire choice in. Only respond with a valid JSON object - not wrapped in a \`\`\`json\`\`\` block or prefaced by any commentary. Your response will be parsed and used directly in gameplay.`,
   },
 ];
 
@@ -24,10 +24,7 @@ const messages: Message[] = [
  * @returns Object of type `GameTurn`: `plot`, `choices`, and `outcome`
  */
 async function getChoices(messages: Message[]): Promise<GameTurn> {
-  const { base_url, model } = await getApiInfo();
-
   const data = {
-    model: model,
     messages,
     format: "json",
     stream: false,
@@ -39,21 +36,7 @@ async function getChoices(messages: Message[]): Promise<GameTurn> {
     if (isFirstRun) {
       console.log("Generating hunt...");
     }
-
-    const fetchResponse = await fetch(`${base_url}/api/chat`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    });
-    if (!fetchResponse.ok) {
-      throw new Error(
-        `Fetch request failed with status ${fetchResponse.status}`
-      );
-    }
-
-    const parsedResponse = await fetchResponse.json();
+    const parsedResponse = await getLLMResponse(data);
     const {
       message,
       total_duration,
@@ -118,6 +101,7 @@ export async function hunt() {
       console.log("");
     } catch (e: any) {
       console.error(e);
+      break;
     }
   }
 }
