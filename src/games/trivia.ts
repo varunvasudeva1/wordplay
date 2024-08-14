@@ -1,4 +1,4 @@
-import { Message } from "../types";
+import { GameChoice, GameDifficulty, Message } from "../types";
 import { getLLMResponse, nanosecondsToSeconds, showGameTitle } from "../utils";
 const { Input, Select, Quiz } = require("enquirer");
 const colors = require("ansi-colors");
@@ -7,7 +7,7 @@ dotenv.config();
 
 type GameParams = {
   topic: string;
-  difficulty: "easy" | "medium" | "hard" | "hardcore";
+  difficulty: GameDifficulty;
 };
 
 type Question = {
@@ -79,11 +79,11 @@ function goodbyeMessage(score: number): string {
 
 export async function trivia() {
   let score = 0;
-  showGameTitle("trivia");
+  showGameTitle(GameChoice.Trivia);
   const difficultyQuestion = new Select({
     name: "difficulty",
     message: "DIFFICULTY",
-    choices: ["easy", "medium", "hard", "hardcore"],
+    choices: GameDifficulty,
   });
 
   const topicQuestion = new Input({

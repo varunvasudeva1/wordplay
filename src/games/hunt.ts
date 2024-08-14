@@ -1,14 +1,16 @@
-import { Message } from "../types";
+import { GameChoice, Message } from "../types";
 import { getLLMResponse, nanosecondsToSeconds, showGameTitle } from "../utils";
 const { Select } = require("enquirer");
 const colors = require("ansi-colors");
 const dotenv = require("dotenv");
 dotenv.config();
 
+export type Outcome = "won" | "died" | "undecided";
+
 type GameTurn = {
   plot: string;
   choices: string[];
-  outcome: "won" | "died" | "undecided";
+  outcome: Outcome;
 };
 
 const messages: Message[] = [
@@ -61,7 +63,7 @@ async function getChoices(messages: Message[]): Promise<GameTurn> {
 }
 
 export async function hunt() {
-  showGameTitle("hunt");
+  showGameTitle(GameChoice.Hunt);
 
   let gameOver = false;
 

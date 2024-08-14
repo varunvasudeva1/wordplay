@@ -1,4 +1,4 @@
-import { Message } from "../types";
+import { GameChoice, Message } from "../types";
 import {
   getLLMResponse,
   loadTextFile,
@@ -129,7 +129,7 @@ function validateAnswers(answers: string[], originalWord: string): string[] {
 }
 
 export async function scramble() {
-  showGameTitle("scramble");
+  showGameTitle(GameChoice.Scramble);
 
   try {
     const data = await getWordAndPermutations(messages);
