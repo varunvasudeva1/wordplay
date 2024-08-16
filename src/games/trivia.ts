@@ -1,5 +1,10 @@
 import { GameChoice, GameDifficulty, Message } from "../types";
-import { getLLMResponse, nanosecondsToSeconds, showGameTitle } from "../utils";
+import {
+  getLLMResponse,
+  nanosecondsToSeconds,
+  showGameTitle,
+  writeScorecard,
+} from "../utils";
 const { Input, Select, Quiz } = require("enquirer");
 const colors = require("ansi-colors");
 const dotenv = require("dotenv");
@@ -15,8 +20,6 @@ type Question = {
   choices: string[];
   correctChoice: number;
 };
-
-function scoreGame() {}
 
 /**
  * Function to create questions
@@ -83,7 +86,7 @@ export async function trivia() {
   const difficultyQuestion = new Select({
     name: "difficulty",
     message: "DIFFICULTY",
-    choices: GameDifficulty,
+    choices: Object.values(GameDifficulty),
   });
 
   const topicQuestion = new Input({
@@ -122,6 +125,14 @@ export async function trivia() {
           score
         )}`
       );
+
+      writeScorecard(GameChoice.Trivia, {
+        difficulty,
+        topic,
+        correctQuestions: score,
+        totalQuestions: quiz.length,
+        score: (score / quiz.length) * 100,
+      });
     }
   } catch (e) {
     console.error(e);

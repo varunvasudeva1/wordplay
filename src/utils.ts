@@ -1,5 +1,5 @@
 import { gameColors, sectionSeparator } from "./constants";
-import { APIProvider, GameChoice, Message } from "./types";
+import { APIProvider, GameChoice, GameScorecard, Message } from "./types";
 const colors = require("ansi-colors");
 const dotenv = require("dotenv");
 const fs = require("fs");
@@ -118,10 +118,10 @@ export function nanosecondsToSeconds(ns: number): number {
 }
 
 /**
- *
+ * Function to get a response from an LLM - this is used to generate games/game turns.
+ * @description This function standardizes API calls across the application and automatically manages calls based on API providers.
  * @param data Object containing specs for API call, e.g. `model`, `messages`, `temperature`, etc.
- * @param descriptor Type of response being generated, e.g. "hunt" or "quiz"
- * @returns Message content depending on API provider
+ * @returns Object containing `message` and `total_duration` keys
  */
 export async function getLLMResponse(
   data: any
@@ -159,4 +159,111 @@ export async function getLLMResponse(
       total_duration,
     };
   }
+}
+
+/**
+ * Loads scorecards from a JSON file.
+ * @returns A dictionary mapping games to their corresponding scores
+ */
+export function loadScoresheet(): any {
+  try {
+    const scorecardsString = fs.readFileSync("././scores.json", "utf8");
+    if (!scorecardsString) {
+      return {};
+    }
+    return JSON.parse(scorecardsString);
+  } catch (error: any) {
+    // Check for specific error codes here and log more specific messages
+    if (error.code === "ENOENT") {
+      console.log(`The scores file does not exist at the expected location.`);
+    } else if (error.code === "EACCES") {
+      console.log("Permission denied while reading the scores file.");
+    } else {
+      console.log("Something went wrong while loading scores:", error.message);
+    }
+  }
+}
+
+/**
+ * Loads game scorecards from a specific game.
+ * @param game Game to load scorecards for
+ * @returns A list of scorecards for the given game
+ */
+export function loadScorecards(game: GameChoice): GameScorecard<typeof game>[] {
+  const scorecards = loadScoresheet();
+  const gameScorecards = scorecards[game];
+  return gameScorecards as GameScorecard<typeof game>[];
+}
+
+/**
+ * Writes a new scorecard to the scores.json file.
+ * @param game Game to write a scorecard for
+ * @param scorecard Scorecard to save
+ */
+export function writeScorecard(
+  game: GameChoice,
+  scorecard: GameScorecard<typeof game>
+): void {
+  const scorecards = loadScoresheet();
+
+  if (!scorecards[game]) {
+    scorecards[game] = [scorecard];
+  } else {
+    scorecards[game].push(scorecard);
+  }
+
+  fs.writeFileSync("././scores.json", JSON.stringify(scorecards));
+}
+
+/**
+ * Function to return a comparator for scorecards.
+ * @param game Game type (for different logic for each game)
+ * @returns Function comparing a pair of scorecards. Returns 1 if a > b, -1 if a < b, and 0 if a == b.
+ */
+export function getScorecardComparator(
+  game: GameChoice
+): (a: any, b: any) => number {
+  switch (game) {
+    case GameChoice.Trivia:
+      return (
+        a: GameScorecard<GameChoice.Trivia>,
+        b: GameScorecard<GameChoice.Trivia>
+      ) => {
+        return Math.sign(b.score - a.score);
+      };
+    case GameChoice.Hunt:
+      return (a, b) => {
+        if (a.outcome === "won" && b.outcome !== "won") return -1;
+        else if (a.outcome !== "won" && b.outcome === "won") return 1;
+        else return 0;
+      };
+    case GameChoice.Scramble:
+      return (
+        a: GameScorecard<GameChoice.Scramble>,
+        b: GameScorecard<GameChoice.Scramble>
+      ) => {
+        return Math.sign(b.score - a.score);
+      };
+    default:
+      throw new Error(`No comparator for game ${game}`);
+  }
+}
+
+/**
+ * Function to get an array of top scorecards for the specified game.
+ * @param game Game to get scores for
+ * @param n Number of scores to get
+ * @returns Array of `n` scorecards for the specified game if conditions are met, `null` otherwise
+ */
+export function getTopScores(
+  game: GameChoice,
+  n: number
+): GameScorecard<typeof game>[] | null {
+  const scorecards = loadScorecards(game);
+  if (!scorecards) {
+    return null;
+  }
+  const comparator = getScorecardComparator(game);
+  const sortedScorecards = scorecards.sort(comparator);
+  return sortedScorecards.slice(0, n);
 }

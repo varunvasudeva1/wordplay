@@ -4,23 +4,26 @@ import { hunt } from "./games/hunt";
 import { scramble } from "./games/scramble";
 import { trivia } from "./games/trivia";
 import { APIProvider, GameChoice } from "./types";
-import { setEnvironmentVariable, welcome } from "./utils";
+import { setEnvironmentVariable, welcome, getTopScores } from "./utils";
 const colors = require("ansi-colors");
 const { program } = require("commander");
+const { table } = require("table");
 require("dotenv").config();
+
+program.addHelpText("before", welcome());
 
 program
   .command("play <game>")
   .description("play a game")
   .action((game: GameChoice) => {
     switch (game) {
-      case "trivia":
+      case GameChoice.Trivia:
         trivia();
         break;
-      case "hunt":
+      case GameChoice.Hunt:
         hunt();
         break;
-      case "scramble":
+      case GameChoice.Scramble:
         scramble();
         break;
       default:
@@ -79,9 +82,108 @@ program
   .description("list available games")
   .action(() => {
     console.log("Available Games:");
-    console.log(colors[gameColors["trivia"]]("trivia"));
-    console.log(colors[gameColors["hunt"]]("hunt"));
-    console.log(colors[gameColors["scramble"]]("scramble"));
+    console.log(colors[gameColors[GameChoice.Trivia]]("trivia"));
+    console.log(colors[gameColors[GameChoice.Hunt]]("hunt"));
+    console.log(colors[gameColors[GameChoice.Scramble]]("scramble"));
   });
+
+program
+  .command("score <game>")
+  .description("show top scores for a game")
+  .option(
+    "-n, --num <number>",
+    "Specify number of top scores to show. Default is 5"
+  )
+  .action(
+    (
+      game: GameChoice,
+      options: {
+        num: number;
+      }
+    ) => {
+      const n = options.num ?? 5;
+      const topScores = getTopScores(game, n);
+      if (!topScores) {
+        console.log(
+          `There are no scorecards for ${game}. Play it and come back to view scores!`
+        );
+      } else {
+        console.log(
+          `Showing top ${n} scores for ${colors[gameColors[game]](game)}`
+        );
+        switch (game) {
+          case GameChoice.Trivia:
+            const triviaScores = topScores.map(
+              (scorecard: any, index: number) => [
+                String(index + 1),
+                scorecard.topic,
+                scorecard.difficulty,
+                scorecard.score,
+              ]
+            );
+            triviaScores.unshift([
+              "INDEX",
+              colors["magenta"]("TOPIC"),
+              colors["red"]("DIFFICULTY"),
+              colors["yellow"]("SCORE"),
+            ]);
+            console.log(table(triviaScores));
+            break;
+
+          case GameChoice.Hunt:
+            const huntScores = topScores.map(
+              (scorecard: any, index: number) => [
+                String(index + 1),
+                colors[scorecard.outcome === "died" ? "red" : "green"](
+                  scorecard.outcome
+                ),
+                scorecard.summary,
+              ]
+            );
+            huntScores.unshift([
+              "INDEX",
+              colors["magenta"]("OUTCOME"),
+              colors["yellow"]("SUMMARY"),
+            ]);
+            console.log(
+              table(huntScores, {
+                columns: { 2: { wrapWord: true, width: 60 } },
+              })
+            );
+            break;
+
+          case GameChoice.Scramble:
+            const scrambleScores = topScores.map(
+              (scorecard: any, index: number) => [
+                String(index + 1),
+                scorecard.word,
+                scorecard.correct,
+                scorecard.unique,
+                scorecard.missed,
+                scorecard.score,
+              ]
+            );
+            scrambleScores.unshift([
+              "INDEX",
+              "WORD",
+              colors["green"]("CORRECT"),
+              colors["magenta"]("UNIQUE"),
+              colors["red"]("MISSED"),
+              colors["yellow"]("SCORE"),
+            ]);
+            console.log(table(scrambleScores));
+            break;
+
+          default:
+            console.log(
+              `Please select a valid game to see scores for. Valid options: ${Object.values(
+                GameChoice
+              ).join(", ")}`
+            );
+            break;
+        }
+      }
+    }
+  );
 
 program.parse();

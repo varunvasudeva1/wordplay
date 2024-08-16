@@ -1,3 +1,5 @@
+import { Outcome } from "./games/hunt";
+
 export enum GameChoice {
   Trivia = "trivia",
   Hunt = "hunt",
@@ -20,3 +22,30 @@ export type Message = {
   content: string;
 };
 export type APIProvider = "ollama" | "openai";
+
+// Scorecard types
+export type TriviaScorecard = {
+  difficulty: GameDifficulty;
+  topic: string;
+  correctQuestions: number;
+  totalQuestions: number;
+  score: number;
+};
+export type HuntScorecard = {
+  outcome: Outcome;
+  summary: string;
+};
+export type ScrambleScorecard = {
+  word: string;
+  correct: number;
+  unique: number;
+  missed: number;
+  score: number;
+};
+export type GameScorecard<T extends GameChoice> = T extends GameChoice.Scramble
+  ? ScrambleScorecard
+  : T extends GameChoice.Trivia
+  ? TriviaScorecard
+  : T extends GameChoice.Hunt
+  ? HuntScorecard
+  : never;

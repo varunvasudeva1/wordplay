@@ -4,6 +4,7 @@ import {
   loadTextFile,
   nanosecondsToSeconds,
   showGameTitle,
+  writeScorecard,
 } from "../utils";
 const List = require("enquirer/lib/prompts/List");
 const colors = require("ansi-colors");
@@ -147,26 +148,20 @@ export async function scramble() {
       message: "Type comma-separated answers",
     });
     const userAnswers: string[] = await question.run();
-    const validatedAnswers = validateAnswers(data.permutations, data.word);
-    const correctAnswers = validateAnswers(userAnswers, data.word);
+    const llmValidAnswers = validateAnswers(data.permutations, data.word);
+    const userValidAnswers = validateAnswers(userAnswers, data.word);
 
+    const commonAnswers = lodash.intersection(
+      llmValidAnswers,
+      userValidAnswers
+    );
+    const uniqueAnswers = lodash.difference(userValidAnswers, llmValidAnswers);
+    const missedAnswers = lodash.difference(llmValidAnswers, userValidAnswers);
+
+    console.log(`\n${colors["green"]("You got: ")}${commonAnswers.join(", ")}`);
     console.log(
-      `You got ${colors["green"](correctAnswers.length)} out of ${
-        validatedAnswers.length
-      }!`
+      `${colors["magenta"]("You uniquely got: ")}${uniqueAnswers.join(", ")}`
     );
-
-    // Take a union of correct answers from user and LLM for a master list
-    const allCorrectAnswers: string[] = lodash.union(
-      correctAnswers,
-      validatedAnswers
-    );
-
-    // Compare the two lists
-    console.log(
-      `${colors["green"]("You answered: ")}${correctAnswers.join(", ")}`
-    );
-    const missedAnswers = lodash.difference(allCorrectAnswers, correctAnswers);
     {
       missedAnswers.length > 0
         ? console.log(
@@ -174,6 +169,22 @@ export async function scramble() {
           )
         : null;
     }
+
+    const numerator = commonAnswers.length + uniqueAnswers.length;
+    const denominator = llmValidAnswers.length;
+    const score = parseInt(((numerator / denominator) * 100).toFixed(2));
+
+    console.log(
+      `\nScore: ${colors["green"](numerator)} out of ${denominator}!`
+    );
+
+    writeScorecard(GameChoice.Scramble, {
+      word: data.word,
+      correct: commonAnswers.length,
+      unique: uniqueAnswers.length,
+      missed: missedAnswers.length,
+      score,
+    });
   } catch (e: any) {
     console.error(e);
   }
