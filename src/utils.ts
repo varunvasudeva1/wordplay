@@ -1,5 +1,11 @@
 import { gameColors, sectionSeparator } from "./constants";
-import { APIProvider, GameChoice, GameScorecard, Message } from "./types";
+import {
+  APIProvider,
+  GameChoice,
+  GameScorecard,
+  LLMRequestData,
+  LLMResponse,
+} from "./types";
 const colors = require("ansi-colors");
 const dotenv = require("dotenv");
 const fs = require("fs");
@@ -118,39 +124,58 @@ export function nanosecondsToSeconds(ns: number): number {
 }
 
 /**
+ * Function to validate request data used for LLM call
+ * @param data Object containing specs for API call, e.g. `messages`, `temperature`, `stream`, etc.
+ * @returns True if valid, false otherwise
+ */
+function isLLMRequestDataValid(data: LLMRequestData) {
+  if (!data) return false;
+  if (!data.messages) {
+    return false;
+  }
+  return true;
+}
+
+/**
  * Function to get a response from an LLM - this is used to generate games/game turns.
  * @description This function standardizes API calls across the application and automatically manages calls based on API providers.
- * @param data Object containing specs for API call, e.g. `model`, `messages`, `temperature`, etc.
+ * @param data Object containing specs for API call, e.g. `messages`, `temperature`, `stream`, etc.
  * @returns Object containing `message` and `total_duration` keys
  */
 export async function getLLMResponse(
-  data: any
-): Promise<{ message: Message; total_duration: number }> {
-  const {
-    base_url,
-    provider,
-    model,
-  }: {
-    base_url: string;
-    provider: APIProvider;
-    model: string;
-  } = await getApiInfo();
-  const startTime = Date.now();
-  const endpoint = provider === "ollama" ? "api/chat" : "v1/chat/completions";
-  const fetchResponse = await fetch(`${base_url}/${endpoint}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ ...data, model: model }),
-  });
-  if (!fetchResponse.ok) {
-    throw new Error(`Fetch request failed with status ${fetchResponse.status}`);
+  data: LLMRequestData
+): Promise<LLMResponse> {
+  if (!isLLMRequestDataValid(data)) {
+    throw new Error("Invalid data. Retry with a valid request.");
   }
-  const parsedResponse = await fetchResponse.json();
+
+  const { provider, base_url, model } = await getApiInfo();
+  const startTime = Date.now();
+  const endpoint = provider === "ollama" ? "api/chat" : "chat/completions";
+
+  let parsedResponse;
+  try {
+    const fetchResponse = await fetch(`${base_url}/${endpoint}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ ...data, model: model }),
+    });
+
+    if (!fetchResponse.ok) {
+      throw new Error(
+        `Fetch request failed with status ${fetchResponse.status}`
+      );
+    }
+
+    parsedResponse = await fetchResponse.json();
+  } catch (error) {
+    throw new Error(`Error while getting response from LLM. Details: ${error}`);
+  }
 
   if (provider === "ollama") {
-    return parsedResponse;
+    return parsedResponse as LLMResponse;
   } else {
     const { choices, created } = parsedResponse;
     const total_duration = (startTime - created) / 1000;
@@ -189,10 +214,20 @@ export function loadScoresheet(): any {
  * @param game Game to load scorecards for
  * @returns A list of scorecards for the given game
  */
-export function loadScorecards(game: GameChoice): GameScorecard<typeof game>[] {
+export function loadScorecards<T extends GameChoice>(
+  game: T
+): GameScorecard<T>[] {
   const scorecards = loadScoresheet();
-  const gameScorecards = scorecards[game];
-  return gameScorecards as GameScorecard<typeof game>[];
+
+  if (!(game in scorecards)) {
+    throw new Error(`No scorecards found for game ${game}`);
+  }
+
+  if (!Array.isArray(scorecards[game])) {
+    throw new Error(`Invalid scorecard data for game ${game}`);
+  }
+
+  return scorecards[game] as GameScorecard<T>[];
 }
 
 /**
@@ -204,15 +239,37 @@ export function writeScorecard(
   game: GameChoice,
   scorecard: GameScorecard<typeof game>
 ): void {
-  const scorecards = loadScoresheet();
+  try {
+    let scorecards = loadScoresheet() || {}; // Initialize to empty object if null or undefined
+    if (!scorecards[game]) {
+      scorecards[game] = [];
+    }
 
-  if (!scorecards[game]) {
-    scorecards[game] = [scorecard];
-  } else {
-    scorecards[game].push(scorecard);
+    if (Array.isArray(scorecards[game])) {
+      scorecards[game].push(scorecard);
+    } else {
+      throw new Error(`Invalid scorecard data for game ${game}`);
+    }
+
+    fs.writeFileSync("./scores.json", JSON.stringify(scorecards));
+  } catch (error: any) {
+    if (error.code === "ENOENT") {
+      console.log(
+        "The scores file does not exist at the expected location. Creating new file..."
+      );
+      fs.writeFileSync(
+        "./scores.json",
+        JSON.stringify({ [game]: [scorecard] })
+      ); // Create new file with scorecard data
+    } else if (error.code === "EACCES") {
+      console.log("Permission denied while writing the scores file.");
+    } else {
+      console.log(
+        "Something went wrong while writing the scorecard:",
+        error.message
+      );
+    }
   }
-
-  fs.writeFileSync("././scores.json", JSON.stringify(scorecards));
 }
 
 /**
@@ -255,15 +312,30 @@ export function getScorecardComparator(
  * @param n Number of scores to get
  * @returns Array of `n` scorecards for the specified game if conditions are met, `null` otherwise
  */
-export function getTopScores(
-  game: GameChoice,
+export function getTopScores<T extends GameChoice>(
+  game: T,
   n: number
-): GameScorecard<typeof game>[] | null {
-  const scorecards = loadScorecards(game);
-  if (!scorecards) {
+): GameScorecard<T>[] | null {
+  try {
+    const scorecards = loadScorecards(game);
+    if (!scorecards || !Array.isArray(scorecards)) {
+      console.log(`Invalid or no scorecards found for game ${game}`);
+      return null;
+    }
+    const comparator = getScorecardComparator(game);
+    scorecards.sort(comparator);
+    if (n > scorecards.length) {
+      console.log(
+        `Requested number ${n} exceeds available scorecards for game ${game}`
+      );
+      return scorecards;
+    }
+    return scorecards.slice(0, n);
+  } catch (error: any) {
+    console.log(
+      `Something went wrong while fetching top scores for game ${game}:`,
+      error.message
+    );
     return null;
   }
-  const comparator = getScorecardComparator(game);
-  const sortedScorecards = scorecards.sort(comparator);
-  return sortedScorecards.slice(0, n);
 }

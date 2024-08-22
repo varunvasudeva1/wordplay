@@ -23,6 +23,17 @@ export type Message = {
 };
 export type APIProvider = "ollama" | "openai";
 
+export type LLMRequestData = {
+  messages: Message[];
+  format?: string;
+  stream?: boolean;
+  temperature?: number;
+};
+export type LLMResponse = {
+  message: Message;
+  total_duration: number;
+};
+
 // Scorecard types
 export type TriviaScorecard = {
   difficulty: GameDifficulty;
