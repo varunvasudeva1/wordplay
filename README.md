@@ -36,7 +36,7 @@ You can confirm your installation by running `wordplay`.
    ```bash
    wordplay config -b (base_url) -p (provider) -m (model)
    ```
-   - `base_url`: Base URL of the API endpoint, e.g. `localhost:11434` for a default Ollama installation or `https://api.openai.com` for the 'Open'AI API.
+   - `base_url`: Base URL of the API endpoint, e.g. `localhost:11434` for a default Ollama installation or `https://api.openai.com/v1` for the 'Open'AI API.
    - `provider`: Choice between `ollama` and `openai`.
    - `model`: Your model of choice, e.g. `gemma2:27b` or `gpt-whatever`.
 
@@ -48,6 +48,11 @@ You can confirm your installation by running `wordplay`.
 3. Play!
    ```bash
    wordplay play (game)
+   ```
+
+4. View scores
+   ```bash
+   wordplay score (game)
    ```
 
 > [!IMPORTANT]
